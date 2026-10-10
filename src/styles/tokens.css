@@ -1,0 +1,251 @@
+:root {
+  --brand-navy: #0b2a4a;
+  --brand-blue: #1565c0;
+  --brand-blue-dark: #0d47a1;
+  --brand-sky: #1e88e5;
+  --brand-accent: #0288d1;
+  --surface: #f3f6fb;
+  --surface-card: #ffffff;
+  --text: #12233a;
+  --text-muted: #5a6b82;
+  --border: #d7e0ec;
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --danger: #c62828;
+  --warning: #ef6c00;
+  --normal: #f9a825;
+
+  --dept-mechanical: #1565c0;
+  --dept-electrical: #f9a825;
+  --dept-tyre: #2e7d32;
+  --dept-welding: #c62828;
+  --dept-suspension: #6a1b9a;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 8px 28px rgba(11, 42, 74, 0.12);
+  --shadow-sm: 0 2px 10px rgba(11, 42, 74, 0.08);
+  --font: 'Segoe UI', 'Avenir Next', 'Helvetica Neue', sans-serif;
+  --max-mobile: 430px;
+  --demo-bar-h: 40px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(21, 101, 192, 0.18), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(2, 136, 209, 0.12), transparent 50%),
+    linear-gradient(180deg, #e8eef7 0%, var(--surface) 40%, #eef3f9 100%);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.app-root {
+  min-height: 100vh;
+  padding-top: var(--demo-bar-h);
+}
+
+.mobile-frame {
+  width: min(100%, var(--max-mobile));
+  margin: 0 auto;
+  min-height: calc(100vh - var(--demo-bar-h));
+  background: var(--surface-card);
+  box-shadow: var(--shadow);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(13, 71, 161, 0.35);
+}
+
+.btn-secondary {
+  background: #e8eef7;
+  color: var(--brand-navy);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand-blue);
+  padding: 8px 10px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-pad {
+  padding: 16px 18px 28px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: var(--brand-navy);
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--brand-navy);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--brand-navy);
+  margin-bottom: 6px;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  color: var(--text);
+}
+
+.field textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+table.data th,
+table.data td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+table.data th {
+  background: #f0f5fb;
+  color: var(--brand-navy);
+  font-weight: 700;
+}
+
+table.data tr:last-child td {
+  border-bottom: none;
+}

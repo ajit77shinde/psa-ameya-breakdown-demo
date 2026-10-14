@@ -3,20 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BrandHeader } from '../../components/BrandHeader';
 import { DeptCard } from '../../components/DeptCard';
 import { PriorityPill } from '../../components/PriorityPill';
-import { DEPARTMENTS, ISSUE_CATALOG, getDepartmentMeta } from '../../data/catalog';
+import { VoiceNote, VoiceRecorder } from '../../components/VoiceNote';
+import { DEPARTMENTS, getDepartmentMeta } from '../../data/catalog';
 import { useDemoStore } from '../../store/DemoStore';
 import type { Department, Priority, Ticket } from '../../types';
 
-const STEPS = [
-  'Vehicle',
-  'Department',
-  'Problem',
-  'Details',
-  'Evidence',
-  'Location',
-  'Priority',
-  'Confirm',
-] as const;
+const STEP_LABELS = {
+  vehicle: 'Vehicle',
+  department: 'Department',
+  report: 'Submit',
+} as const;
+
+type StepId = keyof typeof STEP_LABELS;
 
 const DEFAULT_LOCATION = {
   lat: 18.8302,
@@ -29,43 +27,27 @@ export function ReportWizard() {
   const { currentUser, vehiclesForDriver, createTicket, getVehicle } =
     useDemoStore();
   const vehicles = vehiclesForDriver(currentUser!.id);
+  const steps = useMemo<StepId[]>(
+    () =>
+      vehicles.length > 1
+        ? ['vehicle', 'department', 'report']
+        : ['department', 'report'],
+    [vehicles.length],
+  );
 
   const [step, setStep] = useState(0);
-  const [vehicleId, setVehicleId] = useState(
-    vehicles.length === 1 ? vehicles[0].id : '',
-  );
+  const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
   const [department, setDepartment] = useState<Department | null>(null);
-  const [issue, setIssue] = useState('');
-  const [description, setDescription] = useState('');
+  const [voiceNote, setVoiceNote] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [location, setLocation] = useState(DEFAULT_LOCATION);
-  const [priority, setPriority] = useState<Priority>('high');
   const [submitted, setSubmitted] = useState<Ticket | null>(null);
 
-  const issues = useMemo(
-    () => (department ? ISSUE_CATALOG[department] : []),
-    [department],
-  );
+  const stepId = steps[step] ?? steps[0];
 
-  const canNext = () => {
-    switch (step) {
-      case 0:
-        return Boolean(vehicleId);
-      case 1:
-        return Boolean(department);
-      case 2:
-        return Boolean(issue);
-      case 3:
-        return description.trim().length >= 8;
-      case 4:
-        return true;
-      case 5:
-        return location.address.trim().length > 0;
-      case 6:
-        return Boolean(priority);
-      default:
-        return true;
-    }
+  const goTo = (id: StepId) => {
+    const index = steps.indexOf(id);
+    if (index >= 0) setStep(index);
   };
 
   const onPhotos = (files: FileList | null) => {
@@ -74,20 +56,32 @@ export function ReportWizard() {
     setPhotos((p) => [...p, ...urls].slice(0, 6));
   };
 
-  const submit = () => {
-    if (!department || !vehicleId) return;
+  const submit = (priority: Priority) => {
+    if (!department || !vehicleId || !voiceNote) return;
+    const issue = getDepartmentMeta(department).label;
     const ticket = createTicket({
       vehicleId,
       department,
       issue,
-      description,
+      description: 'Voice recording',
       priority,
-      location,
+      location: location.address.trim() ? location : DEFAULT_LOCATION,
       photos,
+      voiceNote,
     });
     setSubmitted(ticket);
-    setStep(7);
   };
+
+  if (vehicles.length === 0) {
+    return (
+      <div className="mobile-frame">
+        <BrandHeader title="Report Breakdown" backTo="/driver" />
+        <div className="page-pad">
+          <p className="muted">No vehicle is assigned to this driver.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     const vehicle = getVehicle(submitted.vehicleId);
@@ -147,6 +141,7 @@ export function ReportWizard() {
                 </strong>
               </div>
             </div>
+            <VoiceNote src={submitted.voiceNote} />
           </div>
           <button
             type="button"
@@ -173,25 +168,28 @@ export function ReportWizard() {
       <BrandHeader
         title="Report Breakdown"
         backTo="/driver"
-        subtitle={`Step ${step + 1} of 7 · ${STEPS[step]}`}
+        subtitle={`Step ${step + 1} of ${steps.length} · ${STEP_LABELS[stepId]}`}
       />
       <div className="page-pad stack" style={{ flex: 1 }}>
         <div className="wizard-steps">
-          {STEPS.slice(0, 7).map((_, i) => (
-            <span key={STEPS[i]} className={i <= step ? 'done' : ''} />
+          {steps.map((id, i) => (
+            <span key={id} className={i <= step ? 'done' : ''} />
           ))}
         </div>
 
-        {step === 0 && (
+        {stepId === 'vehicle' && (
           <>
             <h2 className="h2">Select Vehicle</h2>
-            <p className="muted">Choose the vehicle with the issue.</p>
+            <p className="muted">Tap the vehicle with the issue.</p>
             {vehicles.map((v) => (
               <button
                 key={v.id}
                 type="button"
                 className={`choice-chip ${vehicleId === v.id ? 'selected' : ''}`}
-                onClick={() => setVehicleId(v.id)}
+                onClick={() => {
+                  setVehicleId(v.id);
+                  goTo('department');
+                }}
               >
                 <strong>{v.registrationNumber}</strong>
                 <div className="muted" style={{ fontSize: 13 }}>
@@ -202,10 +200,10 @@ export function ReportWizard() {
           </>
         )}
 
-        {step === 1 && (
+        {stepId === 'department' && (
           <>
             <h2 className="h2">Select Department</h2>
-            <p className="muted">Choose the department for vehicle issue.</p>
+            <p className="muted">Tap the department for this issue.</p>
             {DEPARTMENTS.map((d) => (
               <DeptCard
                 key={d.id}
@@ -213,54 +211,20 @@ export function ReportWizard() {
                 selected={department === d.id}
                 onClick={() => {
                   setDepartment(d.id);
-                  setIssue('');
+                  goTo('report');
                 }}
               />
             ))}
           </>
         )}
 
-        {step === 2 && (
+        {stepId === 'report' && (
           <>
-            <h2 className="h2">Select Problem</h2>
+            <h2 className="h2">Send Report</h2>
             <p className="muted">
-              {department ? getDepartmentMeta(department).label : ''} issues
+              Record what happened, then tap a priority to submit.
             </p>
-            {issues.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={`choice-chip ${issue === item ? 'selected' : ''}`}
-                onClick={() => setIssue(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <h2 className="h2">Describe Problem</h2>
-            <div className="field">
-              <label htmlFor="desc">What happened?</label>
-              <textarea
-                id="desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Vehicle stopped suddenly while travelling. Engine temperature is very high..."
-              />
-            </div>
-            <p className="muted" style={{ fontSize: 13 }}>
-              Voice recording — Coming in Phase 2
-            </p>
-          </>
-        )}
-
-        {step === 4 && (
-          <>
-            <h2 className="h2">Upload Evidence</h2>
-            <p className="muted">Camera / Gallery photos (local preview only).</p>
+            <VoiceRecorder value={voiceNote} onChange={setVoiceNote} />
             <label className="btn btn-secondary btn-block">
               📷 Add Photos
               <input
@@ -278,20 +242,8 @@ export function ReportWizard() {
                 ))}
               </div>
             )}
-          </>
-        )}
-
-        {step === 5 && (
-          <>
-            <h2 className="h2">Location</h2>
-            <p className="muted">GPS captured for demo. You can edit the address.</p>
-            <div className="card" style={{ padding: 14 }}>
-              <div className="muted" style={{ fontSize: 13 }}>
-                Lat {location.lat}, Lng {location.lng}
-              </div>
-            </div>
             <div className="field">
-              <label htmlFor="addr">Address</label>
+              <label htmlFor="addr">Location</label>
               <input
                 id="addr"
                 value={location.address}
@@ -300,19 +252,6 @@ export function ReportWizard() {
                 }
               />
             </div>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setLocation(DEFAULT_LOCATION)}
-            >
-              📍 Use current demo GPS
-            </button>
-          </>
-        )}
-
-        {step === 6 && (
-          <>
-            <h2 className="h2">Priority</h2>
             {(
               [
                 ['emergency', 'Accident, blocking road, brake/engine failure'],
@@ -323,7 +262,8 @@ export function ReportWizard() {
               <button
                 key={p}
                 type="button"
-                className={`priority-option ${priority === p ? 'selected' : ''}`}
+                className="priority-option"
+                disabled={!voiceNote}
                 style={{
                   color:
                     p === 'emergency'
@@ -332,7 +272,7 @@ export function ReportWizard() {
                         ? 'var(--warning)'
                         : 'var(--normal)',
                 }}
-                onClick={() => setPriority(p)}
+                onClick={() => submit(p)}
               >
                 <PriorityPill priority={p} />
                 <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
@@ -343,8 +283,8 @@ export function ReportWizard() {
           </>
         )}
 
-        <div className="row" style={{ marginTop: 'auto', paddingTop: 12 }}>
-          {step > 0 && (
+        {step > 0 && (
+          <div className="row" style={{ marginTop: 'auto', paddingTop: 12 }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -352,29 +292,8 @@ export function ReportWizard() {
             >
               Back
             </button>
-          )}
-          {step < 6 ? (
-            <button
-              type="button"
-              className="btn btn-primary"
-              style={{ flex: 1 }}
-              disabled={!canNext()}
-              onClick={() => setStep((s) => s + 1)}
-            >
-              Continue
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-success"
-              style={{ flex: 1 }}
-              disabled={!canNext()}
-              onClick={submit}
-            >
-              Submit Report
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

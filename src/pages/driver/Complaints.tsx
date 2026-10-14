@@ -4,6 +4,7 @@ import { BottomNav } from '../../components/BottomNav';
 import { PriorityPill } from '../../components/PriorityPill';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Timeline } from '../../components/Timeline';
+import { VoiceNote } from '../../components/VoiceNote';
 import { getDepartmentMeta } from '../../data/catalog';
 import { useDemoStore } from '../../store/DemoStore';
 
@@ -84,9 +85,13 @@ export function DriverComplaintDetail() {
               {dept.icon} {ticket.issue}
             </strong>
           </p>
-          <p className="muted" style={{ margin: '6px 0 0' }}>
-            {ticket.description}
-          </p>
+          {ticket.voiceNote ? (
+            <VoiceNote src={ticket.voiceNote} />
+          ) : (
+            <p className="muted" style={{ margin: '6px 0 0' }}>
+              {ticket.description}
+            </p>
+          )}
           <div className="summary-list" style={{ marginTop: 12 }}>
             <div>
               <span className="muted">Vehicle</span>

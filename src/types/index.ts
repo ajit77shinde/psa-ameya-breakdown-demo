@@ -13,10 +13,8 @@ export type TicketStatus =
   | 'submitted'
   | 'team_assigned'
   | 'accepted'
-  | 'on_the_way'
   | 'work_started'
-  | 'repair_completed'
-  | 'closed';
+  | 'repair_completed';
 
 export type VehicleStatus = 'active' | 'breakdown' | 'maintenance';
 
@@ -70,6 +68,7 @@ export interface Ticket {
   priority: Priority;
   location: LocationInfo;
   photos: string[];
+  voiceNote?: string;
   status: TicketStatus;
   assignedTechnicianId?: string;
   notes: TicketNote[];

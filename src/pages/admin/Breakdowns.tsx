@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { PriorityPill } from '../../components/PriorityPill';
 import { StatusBadge } from '../../components/StatusBadge';
 import { DEPARTMENTS } from '../../data/catalog';
+import { STATUS_LABELS, STATUS_ORDER } from '../../lib/statusMachine';
 import { useDemoStore } from '../../store/DemoStore';
 import type { Department } from '../../types';
 
@@ -52,13 +53,11 @@ export function AdminBreakdowns() {
             onChange={(e) => setStatus(e.target.value)}
           >
             <option value="all">All</option>
-            <option value="submitted">Submitted</option>
-            <option value="team_assigned">Team Assigned</option>
-            <option value="accepted">Accepted</option>
-            <option value="on_the_way">On The Way</option>
-            <option value="work_started">Work Started</option>
-            <option value="repair_completed">Repair Completed</option>
-            <option value="closed">Closed</option>
+            {STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
           </select>
         </div>
       </div>

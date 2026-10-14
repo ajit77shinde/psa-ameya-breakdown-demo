@@ -19,6 +19,7 @@ Open the URL Vite prints (usually `http://localhost:5173`).
 | Persona | Role |
 |---|---|
 | Ramesh Patil | Driver — report & track |
+| Suresh Kadam | Driver — second vehicle |
 | Rajesh Mechanical | Technician — accept & update jobs |
 | Amit Electrical | Technician — department filter |
 | Priya Supervisor | Admin — dashboard & assign |

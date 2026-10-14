@@ -1,20 +1,16 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { BrandHeader } from '../../components/BrandHeader';
 import { PriorityPill } from '../../components/PriorityPill';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Timeline } from '../../components/Timeline';
+import { VoiceNote } from '../../components/VoiceNote';
 import { getDepartmentMeta } from '../../data/catalog';
-import {
-  canAdvance,
-  nextStatus,
-  statusActionLabel,
-} from '../../lib/statusMachine';
+import { canAdvance, statusActionLabel } from '../../lib/statusMachine';
 import { useDemoStore } from '../../store/DemoStore';
 
 export function TechTicketDetail() {
   const { ticketId } = useParams();
-  const navigate = useNavigate();
   const {
     state,
     currentUser,
@@ -42,7 +38,6 @@ export function TechTicketDetail() {
   const dept = getDepartmentMeta(ticket.department);
   const mapsUrl = `https://www.google.com/maps?q=${ticket.location.lat},${ticket.location.lng}`;
   const action = statusActionLabel(ticket.status);
-  const next = nextStatus(ticket.status);
 
   const handleAdvance = () => {
     if (ticket.status === 'submitted') {
@@ -78,7 +73,11 @@ export function TechTicketDetail() {
               {dept.icon} {ticket.issue}
             </strong>
           </p>
-          <p className="muted">{ticket.description}</p>
+          {ticket.voiceNote ? (
+            <VoiceNote src={ticket.voiceNote} />
+          ) : (
+            <p className="muted">{ticket.description}</p>
+          )}
           <div className="summary-list" style={{ marginTop: 10 }}>
             <div>
               <span className="muted">Vehicle</span>
@@ -149,27 +148,9 @@ export function TechTicketDetail() {
               {ticket.status === 'submitted' || ticket.status === 'team_assigned'
                 ? 'Accept Job'
                 : action}
-              {next &&
-              ticket.status !== 'submitted' &&
-              ticket.status !== 'team_assigned'
-                ? ''
-                : ''}
             </button>
           )}
         </div>
-
-        {ticket.status === 'repair_completed' && (
-          <button
-            type="button"
-            className="btn btn-success btn-block"
-            onClick={() => {
-              setTicketStatus(ticket.id, 'closed');
-              navigate('/tech');
-            }}
-          >
-            Close Ticket
-          </button>
-        )}
 
         <div className="card" style={{ padding: 14 }}>
           <h2 className="h2" style={{ marginBottom: 12 }}>

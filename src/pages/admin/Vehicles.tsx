@@ -18,6 +18,19 @@ export function AdminVehicles() {
   const [form, setForm] = useState(emptyForm());
   const [editingId, setEditingId] = useState<string | null>(null);
   const drivers = state.users.filter((u) => u.role === 'driver');
+  const availableDrivers = drivers.filter(
+    (driver) =>
+      !state.vehicles.some(
+        (vehicle) =>
+          vehicle.assignedDriverId === driver.id && vehicle.id !== editingId,
+      ),
+  );
+  const selectedDriverId = availableDrivers.some(
+    (driver) => driver.id === form.assignedDriverId,
+  )
+    ? form.assignedDriverId
+    : (availableDrivers[0]?.id ?? '');
+  const driverTaken = !selectedDriverId;
 
   const startEdit = (v: Vehicle) => {
     setEditingId(v.id);
@@ -34,10 +47,11 @@ export function AdminVehicles() {
   };
 
   const save = () => {
-    if (!form.registrationNumber.trim()) return;
+    if (!form.registrationNumber.trim() || !selectedDriverId) return;
     const vehicle: Vehicle = {
       id: editingId ?? `v-${Date.now()}`,
       ...form,
+      assignedDriverId: selectedDriverId,
     };
     upsertVehicle(vehicle);
     setEditingId(null);
@@ -49,7 +63,7 @@ export function AdminVehicles() {
       <div>
         <h1 className="h1">Vehicles</h1>
         <p className="muted" style={{ marginTop: 6 }}>
-          Manage fleet vehicles (demo store).
+          Each driver is assigned one vehicle.
         </p>
       </div>
 
@@ -112,17 +126,26 @@ export function AdminVehicles() {
           <div className="field">
             <label>Assigned Driver</label>
             <select
-              value={form.assignedDriverId}
+              value={selectedDriverId}
               onChange={(e) =>
                 setForm((f) => ({ ...f, assignedDriverId: e.target.value }))
               }
+              disabled={availableDrivers.length === 0}
             >
-              {drivers.map((d) => (
+              {availableDrivers.length === 0 && (
+                <option value="">No driver available</option>
+              )}
+              {availableDrivers.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
                 </option>
               ))}
             </select>
+            {availableDrivers.length === 0 && (
+              <span className="muted" style={{ fontSize: 12 }}>
+                Every driver already has a vehicle.
+              </span>
+            )}
           </div>
           <div className="field">
             <label>Status</label>
@@ -142,7 +165,12 @@ export function AdminVehicles() {
           </div>
         </div>
         <div className="row" style={{ marginTop: 12 }}>
-          <button type="button" className="btn btn-primary" onClick={save}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={save}
+            disabled={driverTaken}
+          >
             {editingId ? 'Update Vehicle' : 'Add Vehicle'}
           </button>
           {editingId && (

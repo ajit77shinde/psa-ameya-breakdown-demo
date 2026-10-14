@@ -130,6 +130,11 @@ img {
   color: #fff;
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: #fff;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--brand-blue);

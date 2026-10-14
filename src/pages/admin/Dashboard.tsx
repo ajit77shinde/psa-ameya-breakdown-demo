@@ -1,5 +1,5 @@
 import { DEPARTMENTS } from '../../data/catalog';
-import { STATUS_LABELS } from '../../lib/statusMachine';
+import { isTicketClosed, STATUS_LABELS, STATUS_ORDER } from '../../lib/statusMachine';
 import { useDemoStore } from '../../store/DemoStore';
 import type { Priority, TicketStatus } from '../../types';
 
@@ -11,7 +11,7 @@ export function AdminDashboard() {
     tickets.filter((t) => t.priority === p).length;
   const byStatus = (s: TicketStatus) =>
     tickets.filter((t) => t.status === s).length;
-  const open = tickets.filter((t) => t.status !== 'closed').length;
+  const open = tickets.filter((t) => !isTicketClosed(t.status)).length;
 
   return (
     <div className="stack">
@@ -53,17 +53,7 @@ export function AdminDashboard() {
         <div className="card" style={{ padding: 16 }}>
           <h2 className="h2">Current Status</h2>
           <div className="summary-list" style={{ marginTop: 12 }}>
-            {(
-              [
-                'submitted',
-                'team_assigned',
-                'accepted',
-                'on_the_way',
-                'work_started',
-                'repair_completed',
-                'closed',
-              ] as TicketStatus[]
-            ).map((s) => (
+            {STATUS_ORDER.map((s) => (
               <div key={s}>
                 <span className="muted">{STATUS_LABELS[s]}</span>
                 <strong>{byStatus(s)}</strong>

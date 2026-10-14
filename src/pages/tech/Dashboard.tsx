@@ -25,13 +25,10 @@ function matchesTab(t: Ticket, tab: Tab, techId: string): boolean {
   if (tab === 'active') {
     return (
       t.assignedTechnicianId === techId &&
-      (t.status === 'on_the_way' || t.status === 'work_started')
+      t.status === 'work_started'
     );
   }
-  return (
-    t.assignedTechnicianId === techId &&
-    (t.status === 'repair_completed' || t.status === 'closed')
-  );
+  return t.assignedTechnicianId === techId && t.status === 'repair_completed';
 }
 
 export function TechDashboard() {

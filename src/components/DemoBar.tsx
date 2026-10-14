@@ -1,17 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { DEMO_LOGIN_IDS } from '../data/seed';
 import { useDemoStore } from '../store/DemoStore';
 
 export function DemoBar() {
   const { currentUser, logout, resetDemo, state, loginAs } = useDemoStore();
   const navigate = useNavigate();
 
-  const personas = state.users.filter(
-    (u) =>
-      u.id === 'u-driver-1' ||
-      u.id === 'u-tech-mech' ||
-      u.id === 'u-tech-elec' ||
-      u.id === 'u-admin',
-  );
+  const personas = DEMO_LOGIN_IDS.map(
+    (id) => state.users.find((u) => u.id === id)!,
+  ).filter(Boolean);
 
   return (
     <div className="demo-bar">

@@ -1,18 +1,14 @@
 import { useNavigate } from 'react-router-dom';
+import { DEMO_LOGIN_IDS } from '../data/seed';
 import { useDemoStore } from '../store/DemoStore';
-
-const PERSONAS = [
-  'u-driver-1',
-  'u-tech-mech',
-  'u-tech-elec',
-  'u-admin',
-] as const;
 
 export function Login() {
   const { state, loginAs } = useDemoStore();
   const navigate = useNavigate();
 
-  const users = PERSONAS.map((id) => state.users.find((u) => u.id === id)!);
+  const users = DEMO_LOGIN_IDS.map(
+    (id) => state.users.find((u) => u.id === id)!,
+  );
 
   return (
     <div className="login-page">

@@ -1,4 +1,8 @@
-import { STATUS_LABELS, STATUS_ORDER } from '../lib/statusMachine';
+import {
+  normalizeTicketStatus,
+  STATUS_LABELS,
+  STATUS_ORDER,
+} from '../lib/statusMachine';
 import type { StatusEvent, TicketStatus } from '../types';
 
 interface Props {
@@ -7,7 +11,7 @@ interface Props {
 }
 
 export function Timeline({ current, history }: Props) {
-  const currentIdx = STATUS_ORDER.indexOf(current);
+  const currentIdx = STATUS_ORDER.indexOf(normalizeTicketStatus(current));
   const byStatus = new Map(history.map((h) => [h.status, h]));
 
   return (

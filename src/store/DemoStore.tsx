@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { createSeedState, STORAGE_KEY } from '../data/seed';
 import { nextTicketId } from '../lib/ticketId';
-import { nextStatus } from '../lib/statusMachine';
+import { isTicketClosed, nextStatus, normalizeTicketStatus } from '../lib/statusMachine';
 import type {
   DemoState,
   Department,
@@ -30,6 +30,7 @@ interface CreateTicketInput {
   priority: Priority;
   location: LocationInfo;
   photos: string[];
+  voiceNote?: string;
 }
 
 interface DemoStoreValue {
@@ -59,7 +60,17 @@ function loadState(): DemoState {
     if (!raw) return createSeedState();
     const parsed = JSON.parse(raw) as DemoState;
     if (!parsed.users?.length) return createSeedState();
-    return parsed;
+    return {
+      ...parsed,
+      tickets: parsed.tickets.map((ticket) => ({
+        ...ticket,
+        status: normalizeTicketStatus(ticket.status),
+        statusHistory: ticket.statusHistory.map((event) => ({
+          ...event,
+          status: normalizeTicketStatus(event.status),
+        })),
+      })),
+    };
   } catch {
     return createSeedState();
   }
@@ -69,7 +80,31 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DemoState>(() => loadState());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    setState((s) => {
+      let changed = false;
+      const tickets = s.tickets.map((ticket) => {
+        const status = normalizeTicketStatus(ticket.status);
+        const statusHistory = ticket.statusHistory.map((event) => ({
+          ...event,
+          status: normalizeTicketStatus(event.status),
+        }));
+        const historyChanged = statusHistory.some(
+          (event, index) => event.status !== ticket.statusHistory[index]?.status,
+        );
+        if (status === ticket.status && !historyChanged) return ticket;
+        changed = true;
+        return { ...ticket, status, statusHistory };
+      });
+      return changed ? { ...s, tickets } : s;
+    });
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // A long voice note can exceed local storage. The ticket still stays in this session.
+    }
   }, [state]);
 
   const currentUser = useMemo(
@@ -116,6 +151,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         priority: input.priority,
         location: input.location,
         photos: input.photos,
+        voiceNote: input.voiceNote,
         status: 'submitted',
         notes: [],
         statusHistory: [{ status: 'submitted', at: now, byUserId: driverId }],
@@ -195,19 +231,15 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             { status: n, at: now, byUserId: userId },
           ],
           updatedAt: now,
-          resolvedAt:
-            n === 'repair_completed' || n === 'closed'
-              ? now
-              : ticket.resolvedAt,
+          resolvedAt: isTicketClosed(n) ? now : ticket.resolvedAt,
         };
-        const vehicles =
-          n === 'closed' || n === 'repair_completed'
-            ? s.vehicles.map((v) =>
-                v.id === ticket.vehicleId
-                  ? { ...v, status: 'active' as VehicleStatus }
-                  : v,
-              )
-            : s.vehicles;
+        const vehicles = isTicketClosed(n)
+          ? s.vehicles.map((v) =>
+              v.id === ticket.vehicleId
+                ? { ...v, status: 'active' as VehicleStatus }
+                : v,
+            )
+          : s.vehicles;
         return {
           ...s,
           tickets: s.tickets.map((t) => (t.id === ticketId ? updated : t)),
@@ -244,23 +276,19 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             { status, at: now, byUserId: userId },
           ],
           updatedAt: now,
-          resolvedAt:
-            status === 'repair_completed' || status === 'closed'
-              ? now
-              : ticket.resolvedAt,
+          resolvedAt: isTicketClosed(status) ? now : ticket.resolvedAt,
           assignedTechnicianId:
             status === 'accepted' && !ticket.assignedTechnicianId
               ? userId
               : ticket.assignedTechnicianId,
         };
-        const vehicles =
-          status === 'closed' || status === 'repair_completed'
-            ? s.vehicles.map((v) =>
-                v.id === ticket.vehicleId
-                  ? { ...v, status: 'active' as VehicleStatus }
-                  : v,
-              )
-            : s.vehicles;
+        const vehicles = isTicketClosed(status)
+          ? s.vehicles.map((v) =>
+              v.id === ticket.vehicleId
+                ? { ...v, status: 'active' as VehicleStatus }
+                : v,
+            )
+          : s.vehicles;
         return {
           ...s,
           tickets: s.tickets.map((t) => (t.id === ticketId ? updated : t)),
@@ -316,6 +344,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const upsertVehicle = useCallback((vehicle: Vehicle) => {
     setState((s) => {
+      const driverTaken = s.vehicles.some(
+        (v) =>
+          v.id !== vehicle.id &&
+          v.assignedDriverId === vehicle.assignedDriverId,
+      );
+      if (driverTaken) return s;
       const exists = s.vehicles.some((v) => v.id === vehicle.id);
       return {
         ...s,

@@ -57,7 +57,7 @@ export const SEED_VEHICLES: Vehicle[] = [
     model: 'Signa 4018',
     year: 2022,
     assignedDriverId: 'u-driver-1',
-    status: 'active',
+    status: 'breakdown',
     odometer: 84250,
   },
   {
@@ -70,17 +70,6 @@ export const SEED_VEHICLES: Vehicle[] = [
     assignedDriverId: 'u-driver-2',
     status: 'breakdown',
     odometer: 112400,
-  },
-  {
-    id: 'v-3',
-    registrationNumber: 'MH 14 EF 7788',
-    type: 'Trailer Truck',
-    manufacturer: 'BharatBenz',
-    model: '4023T',
-    year: 2023,
-    assignedDriverId: 'u-driver-1',
-    status: 'active',
-    odometer: 52100,
   },
 ];
 
@@ -122,7 +111,7 @@ export const SEED_TICKETS: Ticket[] = [
       address: 'Mumbai-Pune Expressway, Khalapur',
     },
     photos: [],
-    status: 'closed',
+    status: 'repair_completed',
     assignedTechnicianId: 'u-tech-tyre',
     notes: [
       {
@@ -136,10 +125,8 @@ export const SEED_TICKETS: Ticket[] = [
       { status: 'submitted', at: hours(72), byUserId: 'u-driver-1' },
       { status: 'team_assigned', at: hours(71), byUserId: 'u-admin' },
       { status: 'accepted', at: hours(70), byUserId: 'u-tech-tyre' },
-      { status: 'on_the_way', at: hours(69), byUserId: 'u-tech-tyre' },
       { status: 'work_started', at: hours(68), byUserId: 'u-tech-tyre' },
       { status: 'repair_completed', at: hours(67), byUserId: 'u-tech-tyre' },
-      { status: 'closed', at: hours(66), byUserId: 'u-tech-tyre' },
     ],
     createdAt: hours(72),
     updatedAt: hours(66),
@@ -147,7 +134,7 @@ export const SEED_TICKETS: Ticket[] = [
   },
   {
     id: 'BRK-2026-001018',
-    vehicleId: 'v-3',
+    vehicleId: 'v-1',
     driverId: 'u-driver-1',
     department: 'mechanical',
     issue: 'Clutch problem',
@@ -181,4 +168,12 @@ export function createSeedState(): DemoState {
   };
 }
 
-export const STORAGE_KEY = 'psa-ameya-breakdown-demo-v1';
+export const DEMO_LOGIN_IDS = [
+  'u-driver-1',
+  'u-driver-2',
+  'u-tech-mech',
+  'u-tech-elec',
+  'u-admin',
+] as const;
+
+export const STORAGE_KEY = 'psa-ameya-breakdown-demo-v2';

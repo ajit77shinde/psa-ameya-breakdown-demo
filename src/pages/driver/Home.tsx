@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BrandHeader } from '../../components/BrandHeader';
 import { BottomNav } from '../../components/BottomNav';
+import { isTicketClosed } from '../../lib/statusMachine';
 import { useDemoStore } from '../../store/DemoStore';
 
 export function DriverHome() {
@@ -8,7 +9,7 @@ export function DriverHome() {
   const vehicles = vehiclesForDriver(currentUser!.id);
   const primary = vehicles[0];
   const openCount = ticketsForDriver(currentUser!.id).filter(
-    (t) => t.status !== 'closed',
+    (t) => !isTicketClosed(t.status),
   ).length;
 
   return (

@@ -411,6 +411,11 @@
   border-color: currentColor;
 }
 
+.priority-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -506,6 +511,17 @@
   background: var(--brand-navy);
   border-color: var(--brand-navy);
   color: #fff;
+}
+
+.voice-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.voice-note audio {
+  width: 100%;
 }
 
 .photo-grid {
